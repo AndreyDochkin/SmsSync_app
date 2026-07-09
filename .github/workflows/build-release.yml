@@ -1,0 +1,67 @@
+name: Build Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Rename APK
+        run: |
+          mv app/build/outputs/apk/release/app-release-unsigned-signed.apk \
+             SmsSync-2.3.0.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: SmsSync v2.3.0
+          body: |
+            ## SmsSync v2.3.0
+
+            Lightweight Android app that forwards incoming SMS to a Telegram chat in real-time.
+
+            ### Features
+            - Real-time SMS to Telegram forwarding
+            - Multi-SIM detection with carrier/custom naming
+            - Sender blacklist with wildcard support
+            - Customizable message template
+            - Auto-retry with exponential backoff
+            - In-app test mode
+            - Battery optimization prompt
+          files: |
+            SmsSync-2.3.0.apk
+          draft: false
+          prerelease: false
