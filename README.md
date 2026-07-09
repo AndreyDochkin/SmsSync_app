@@ -6,7 +6,29 @@
 
 Lightweight Android app that forwards incoming SMS to a Telegram chat in real-time. No servers, no cloud.
 
----
+## Features
+
+- **Real-time forwarding** — Incoming SMS are sent to Telegram instantly via a foreground service
+- **Multi-SIM support** — Auto-detects which SIM received the message (carrier name or custom label)
+- **Sender blacklist** — Block specific numbers or use wildcards (e.g. `123*`) to block prefixes
+- **Customizable message template** — Use placeholders: `{sender}`, `{message}`, `{sim}`, `{time}`, `{date}`
+- **Encrypted credentials** — Bot token and chat ID stored securely via `EncryptedSharedPreferences`
+- **Auto-retry** — Failed sends are queued and retried with exponential backoff
+- **Daily statistics** — Tracks forwarded message count per day
+- **Test mode** — Emulate an incoming SMS from within the app to verify forwarding works
+- **Battery optimization** — Prompts to disable battery optimization for reliable delivery
+- **Custom SIM naming** — Give each SIM slot a friendly name (e.g. "Personal", "Business")
+
+## Architecture
+
+```
+SmsReceiver (BroadcastReceiver)
+  → detectSimSlot() — multi-layered SIM detection (intent extras → ContentProvider)
+  → TelegramSender.sendSmsToTelegram() — format template + POST to Telegram Bot API
+  → MessageRetryQueue — persist failed messages for retry via WorkManager
+
+ForwardingManager — central state: pause/resume, blacklist, SIM info, daily counters
+```
 
 ## Quick Start
 
@@ -24,6 +46,15 @@ cd smssync/SmsToTelegram
 ```
 
 APK at `app/build/outputs/apk/release/app-release-unsigned.apk`.
+
+## Permissions
+
+| Permission | Purpose |
+|---|---|
+| `RECEIVE_SMS` | Detect incoming SMS messages |
+| `READ_SMS` | Read SIM slot from SMS database (fallback detection) |
+| `POST_NOTIFICATIONS` | Foreground service notification (Android 13+) |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Keep service alive in Doze mode |
 
 ## Tech Stack
 
