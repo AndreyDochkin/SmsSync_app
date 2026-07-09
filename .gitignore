@@ -1,4 +1,4 @@
-Android / Gradle
+# ── Android / Gradle ──
 .gradle/
 build/
 local.properties
@@ -26,12 +26,3 @@ Thumbs.db
 
 # ── Gradle distribution (download, not source) ──
 gradle-*/
-
-# ── APK files (build artifacts) ──
-*.apk
-
-# ── Android SDK ──
-android-sdk/
-
-# ── Presentation / docs artifacts ──
-SmsSync_presentation.html
