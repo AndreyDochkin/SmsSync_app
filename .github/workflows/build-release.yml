@@ -25,23 +25,27 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Extract version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
+      - name: Build Debug APK (signed with debug keystore)
+        run: ./gradlew assembleDebug
 
       - name: Rename APK
         run: |
-          mv app/build/outputs/apk/release/app-release-unsigned.apk \
-             SmsSync-2.3.0.apk
+          cp app/build/outputs/apk/debug/app-debug.apk \
+             SmsSync-${{ steps.get_version.outputs.version }}.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: SmsSync v2.3.0
+          name: SmsSync v${{ steps.get_version.outputs.version }}
           body: |
-            ## SmsSync v2.3.0
+            ## SmsSync v${{ steps.get_version.outputs.version }}
 
             Lightweight Android app that forwards incoming SMS to a Telegram chat in real-time.
 
@@ -54,6 +58,6 @@ jobs:
             - In-app test mode
             - Battery optimization prompt
           files: |
-            SmsSync-2.3.0.apk
+            SmsSync-${{ steps.get_version.outputs.version }}.apk
           draft: false
           prerelease: false
