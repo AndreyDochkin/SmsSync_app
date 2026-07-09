@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_surface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Header with close -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Settings"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/close_button"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="✕"
+                android:textSize="18sp"
+                android:textColor="@color/text_secondary"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- ===== TELEGRAM CREDENTIALS SECTION ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Telegram Bot"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Configure your bot credentials"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="2dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/bot_token_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/bot_token_label"
+            app:boxStrokeColor="@color/accent_primary"
+            app:hintTextColor="@color/accent_primary"
+            app:placeholderText="from @BotFather"
+            app:boxBackgroundColor="@color/background_card"
+            app:boxStrokeWidth="1dp"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/accent_primary">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/bot_token_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
+                android:textSize="14sp"
+                android:inputType="textPassword" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/chat_id_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/chat_id_label"
+            app:boxStrokeColor="@color/accent_primary"
+            app:hintTextColor="@color/accent_primary"
+            app:placeholderText="numeric ID"
+            app:boxBackgroundColor="@color/background_card"
+            app:boxStrokeWidth="1dp"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/accent_primary">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/chat_id_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
+                android:textSize="14sp"
+                android:inputType="textPassword" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Custom message template -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/message_template_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Message Template"
+                app:boxStrokeColor="@color/accent_primary"
+                app:hintTextColor="@color/accent_primary"
+                app:placeholderText="{sender} sent: {message}"
+                app:boxBackgroundColor="@color/background_card"
+                app:boxStrokeWidth="1dp"
+                app:helperText="Placeholders: {sender} {message} {sim} {time} {date}"
+                app:helperTextEnabled="true">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/message_template_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="120dp"
+                    android:gravity="top"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_tertiary"
+                    android:textSize="14sp"
+                    android:inputType="textMultiLine"
+                    android:maxLines="8" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/reset_template_button"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_gravity="end"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_button_secondary"
+                android:text="Reset to default"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                android:textColor="@color/button_secondary_text"
+                android:paddingHorizontal="14dp"
+                android:fontFamily="sans-serif-medium"
+                android:stateListAnimator="@null"
+                android:elevation="1dp" />
+
+        </LinearLayout>
+
+        <!-- ===== BLACKLIST SECTION ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Blocked Senders"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Manage senders to block from forwarding"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/blacklist_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_bento_card"
+            android:padding="14dp"
+            android:layout_marginTop="12dp"
+            android:gravity="center" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp">
+
+            <Button
+                android:id="@+id/add_blacklist_button"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_button_secondary"
+                android:text="Add Sender"
+                android:textSize="14sp"
+                android:textAllCaps="false"
+                android:textColor="@color/button_secondary_text"
+                android:fontFamily="sans-serif-medium"
+                android:stateListAnimator="@null"
+                android:elevation="1dp" />
+
+            <Button
+                android:id="@+id/view_blacklist_button"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_button_secondary"
+                android:text="View / Remove"
+                android:textSize="14sp"
+                android:textAllCaps="false"
+                android:textColor="@color/button_secondary_text"
+                android:fontFamily="sans-serif-medium"
+                android:stateListAnimator="@null"
+                android:elevation="1dp" />
+
+        </LinearLayout>
+
+        <!-- ===== SIM NAME SECTION ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SIM Card Names"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Give each SIM a custom name for message templates"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="2dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_bento_card"
+            android:padding="12dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/sim1_name_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:hint="SIM 1 name"
+                app:boxStrokeColor="@color/accent_primary"
+                app:hintTextColor="@color/accent_primary"
+                app:placeholderText="e.g. Personal"
+                app:boxBackgroundColor="@color/background_card"
+                app:boxStrokeWidth="1dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/sim1_name_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_tertiary"
+                    android:textSize="14sp"
+                    android:maxLines="1"
+                    android:inputType="textCapWords" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/sim2_name_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:hint="SIM 2 name"
+                app:boxStrokeColor="@color/accent_primary"
+                app:hintTextColor="@color/accent_primary"
+                app:placeholderText="e.g. Business"
+                app:boxBackgroundColor="@color/background_card"
+                app:boxStrokeWidth="1dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/sim2_name_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_tertiary"
+                    android:textSize="14sp"
+                    android:maxLines="1"
+                    android:inputType="textCapWords" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
+        <!-- ===== BATTERY OPTIMIZATION SECTION ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Battery Optimization"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Keep app running when phone is sleeping"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="2dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_bento_card"
+            android:padding="14dp"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Disable battery optimization"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary" />
+
+            <Button
+                android:id="@+id/battery_opt_button"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_button_primary"
+                android:text="Request"
+                android:textSize="13sp"
+                android:textAllCaps="false"
+                android:textColor="@color/button_primary_text"
+                android:fontFamily="sans-serif-medium"
+                android:stateListAnimator="@null"
+                android:elevation="1dp"
+                android:paddingHorizontal="16dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This allows SmsSync to receive SMS even when the phone is sleeping, preventing the system from killing the service."
+            android:textSize="12sp"
+            android:textColor="@color/text_tertiary"
+            android:layout_marginTop="6dp"
+            android:lineSpacingExtra="2dp" />
+
+        <!-- Save button -->
+        <Button
+            android:id="@+id/save_credentials_button"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="@string/save_credentials"
+            android:textSize="15sp"
+            android:textAllCaps="false"
+            android:textColor="@color/button_primary_text"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_button_primary"
+            android:stateListAnimator="@null"
+            android:layout_marginTop="24dp" />
+
+    </LinearLayout>
+
+</ScrollView>

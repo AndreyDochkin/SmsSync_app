@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SmsSync</string>
+    <string name="grant_permission">Grant SMS Permission</string>
+    <string name="settings">Settings</string>
+    <string name="bot_token_label">Bot Token</string>
+    <string name="chat_id_label">Chat ID</string>
+    <string name="save_credentials">Save</string>
+    <string name="credentials_saved">Credentials saved</string>
+    <string name="credentials_error_token">Required</string>
+    <string name="credentials_error_chat_id">Required</string>
+
+    <!-- Forwarding toggle -->
+    <string name="pause_forwarding">Pause Forwarding</string>
+    <string name="resume_forwarding">Resume Forwarding</string>
+    <string name="forwarding_paused">Forwarding Paused</string>
+    <string name="forwarding_active">Forwarding Active</string>
+
+    <!-- Test message -->
+    <string name="send_test">Send Test Message</string>
+    <string name="test_sending">Sending test message</string>
+    <string name="test_sent">Test message sent! Check Telegram.</string>
+    <string name="test_failed">Test failed. Check credentials.</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SmsToTelegram" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/accent_primary</item>
+        <item name="colorPrimaryDark">@color/accent_primary_variant</item>
+        <item name="colorAccent">@color/accent_primary</item>
+        <item name="colorOnPrimary">@color/button_primary_text</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="colorSurface">@color/background_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:statusBarColor">@color/accent_primary</item>
+        <item name="android:navigationBarColor">@color/background_surface</item>
+        <item name="android:windowBackground">@color/background_primary</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

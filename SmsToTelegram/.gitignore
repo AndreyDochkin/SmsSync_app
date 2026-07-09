@@ -1,0 +1,28 @@
+# ── Android / Gradle ──
+.gradle/
+build/
+local.properties
+*.iml
+*.class
+*.dex
+bin/
+gen/
+out/
+
+# ── IDE ──
+.idea/
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ── Keystore (do NOT commit) ──
+*.jks
+*.keystore
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Gradle distribution (download, not source) ──
+gradle-*/

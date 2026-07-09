@@ -1,0 +1,20 @@
+# Conventional Commits format:
+# <type>(<scope>): <description>
+#
+# Types:
+#   feat     (new feature)
+#   fix      (bug fix)
+#   docs     (documentation)
+#   style    (formatting, missing semi-colons)
+#   refactor (code change that neither fixes a bug nor adds a feature)
+#   perf     (performance improvement)
+#   test     (adding missing tests)
+#   chore    (updating tasks, release bumps, no production code change)
+#
+# Examples:
+#   feat(ui): redesign landing page with editorial dark mode
+#   fix(service): prevent crash on null SMS body
+#   chore(release): bump to v1.1.1
+#   docs(readme): update installation instructions
+#
+# Keep the description concise (<72 chars), imperative mood, no period.

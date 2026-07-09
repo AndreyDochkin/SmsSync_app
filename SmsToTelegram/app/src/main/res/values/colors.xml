@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bright Light Theme Palette -->
+    <color name="background_primary">#F8F9FA</color>
+    <color name="background_surface">#FFFFFF</color>
+    <color name="background_card">#FFFFFF</color>
+    <color name="background_card_hover">#F0F2F5</color>
+
+    <!-- Text -->
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_tertiary">#9CA3AF</color>
+
+    <!-- Accents -->
+    <color name="accent_primary">#6366F1</color>
+    <color name="accent_primary_variant">#4F46E5</color>
+    <color name="accent_success">#10B981</color>
+    <color name="accent_warning">#F59E0B</color>
+    <color name="accent_danger">#EF4444</color>
+
+    <!-- Status -->
+    <color name="status_active">#10B981</color>
+    <color name="status_paused">#F59E0B</color>
+    <color name="status_disabled">#EF4444</color>
+
+    <!-- Gradient endpoints for timer ring -->
+    <color name="gradient_start">#6366F1</color>
+    <color name="gradient_end">#8B5CF6</color>
+
+    <!-- Card border -->
+    <color name="card_border">#E5E7EB</color>
+
+    <!-- Button -->
+    <color name="button_primary">#6366F1</color>
+    <color name="button_primary_text">#FFFFFF</color>
+    <color name="button_secondary">#F3F4F6</color>
+    <color name="button_secondary_text">#1A1A2E</color>
+    <color name="button_secondary_border">#E5E7EB</color>
+
+    <!-- Overlay -->
+    <color name="overlay_dark">#80000000</color>
+</resources>
