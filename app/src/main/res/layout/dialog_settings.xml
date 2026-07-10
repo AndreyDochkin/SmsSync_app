@@ -130,7 +130,7 @@
                 app:placeholderText="{sender} sent: {message}"
                 app:boxBackgroundColor="@color/background_card"
                 app:boxStrokeWidth="1dp"
-                app:helperText="Placeholders: {sender} {message} {sim} {time} {date}"
+                app:helperText="Placeholders: {sender} {message} {sim} {battery} {time} {date}"
                 app:helperTextEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText

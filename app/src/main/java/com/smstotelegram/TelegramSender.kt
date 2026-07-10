@@ -23,7 +23,7 @@ object TelegramSender {
     private const val KEY_BOT_TOKEN = "bot_token"
     private const val KEY_CHAT_ID = "chat_id"
     private const val KEY_MESSAGE_TEMPLATE = "message_template"
-    private const val DEFAULT_TEMPLATE = "📩 <b>New SMS</b>\n━━━━━━━━━━━━━━\n👤 {sender}\n💬 {message}\n📱 {sim}\n🕐 {time}"
+    private const val DEFAULT_TEMPLATE = "📩 <b>New SMS</b>\n━━━━━━━━━━━━━━\n👤 {sender}\n💬 {message}\n📱 {sim}\n🔋 {battery}\n🕐 {time}"
 
     private const val TELEGRAM_API_BASE = "https://api.telegram.org/bot"
     private const val SEND_MESSAGE_ENDPOINT = "/sendMessage"
@@ -35,8 +35,10 @@ object TelegramSender {
         .build()
 
     private var prefs: android.content.SharedPreferences? = null
+    private var appContext: Context? = null
 
     fun init(context: Context) {
+        appContext = context.applicationContext
         if (prefs != null) return
         try {
             val masterKey = MasterKey.Builder(context)
@@ -95,6 +97,7 @@ object TelegramSender {
      *   {sender}  - sender phone number
      *   {message} - SMS message body
      *   {sim}     - SIM card name (carrier or SIM 1)
+     *   {battery} - battery charge level (e.g. "85%" or "Charging 92%")
      *   {time}    - current time (HH:mm)
      *   {date}    - current date (yyyy-MM-dd)
      */
@@ -107,10 +110,14 @@ object TelegramSender {
         val safeMessage = messageBody.replace("<", "<").replace(">", ">")
         val safeSim = simName.replace("<", "<").replace(">", ">").ifEmpty { "Unknown" }
 
+        val batteryLevel = appContext?.let { ForwardingManager.getBatteryLevel(it) } ?: "N/A"
+        val safeBattery = batteryLevel.replace("<", "<").replace(">", ">")
+
         return template
             .replace("{sender}", safeSender)
             .replace("{message}", safeMessage)
             .replace("{sim}", safeSim)
+            .replace("{battery}", safeBattery)
             .replace("{time}", timeStr)
             .replace("{date}", dateStr)
     }

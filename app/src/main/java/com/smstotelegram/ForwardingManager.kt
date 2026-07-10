@@ -349,4 +349,37 @@ object ForwardingManager {
         }
         return false
     }
+
+    // ---- Battery level ----
+
+    /**
+     * Get the current battery charge level as a formatted string.
+     *
+     * Uses the sticky ACTION_BATTERY_CHANGED intent which requires no
+     * permanent receiver registration.
+     *
+     * @return "85%", "Charging 92%", or "N/A" if unavailable.
+     */
+    fun getBatteryLevel(ctx: Context): String {
+        try {
+            val intent = ctx.registerReceiver(
+                null,
+                android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED)
+            )
+            val level = intent?.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = intent?.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1) ?: -1
+            val status = intent?.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1) ?: -1
+
+            if (level == -1 || scale == -1) return "N/A"
+
+            val percentage = (level * 100.0 / scale).toInt()
+            val charging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == android.os.BatteryManager.BATTERY_STATUS_FULL
+
+            return if (charging) "Charging $percentage%" else "$percentage%"
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to read battery level", e)
+            return "N/A"
+        }
+    }
 }
