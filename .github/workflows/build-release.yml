@@ -3,7 +3,7 @@ name: Build APK
 on:
   push:
     branches:
-      - '**'
+      - main
     tags:
       - 'v*'
 
@@ -12,6 +12,8 @@ permissions:
 
 jobs:
   build:
+    # Build on every tag push or main commit
+    if: github.ref_type == 'tag' || github.ref_name == 'main'
     runs-on: ubuntu-latest
 
     steps:
@@ -33,41 +35,38 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload APK as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: SmsSync-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download APK artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: SmsSync-debug-apk
-
-      - name: Extract version from tag
-        id: get_version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - name: Set version and APK name
+        id: version
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            SHORT_SHA="${GITHUB_SHA:0:7}"
+            VERSION="2.3.0-${SHORT_SHA}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "apk_name=SmsSync-$VERSION.apk" >> "$GITHUB_OUTPUT"
 
       - name: Rename APK
         run: |
-          mv app-debug.apk SmsSync-${{ steps.get_version.outputs.version }}.apk
+          cp app/build/outputs/apk/debug/app-debug.apk \
+             ${{ steps.version.outputs.apk_name }}
 
-      - name: Create Release
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.version.outputs.apk_name }}
+          path: ${{ steps.version.outputs.apk_name }}
+          if-no-files-found: error
+
+      # ─── Tag pushes → create a proper GitHub Release ───
+      - name: Create Release (tag)
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
-          name: SmsSync v${{ steps.get_version.outputs.version }}
+          name: SmsSync v${{ steps.version.outputs.version }}
           body: |
-            ## SmsSync v${{ steps.get_version.outputs.version }}
+            ## SmsSync v${{ steps.version.outputs.version }}
 
             Lightweight Android app that forwards incoming SMS to a Telegram chat in real-time.
 
@@ -75,12 +74,47 @@ jobs:
             - Real-time SMS to Telegram forwarding
             - Multi-SIM detection with carrier/custom naming
             - Sender blacklist with wildcard support
-            - Customizable message template
-            - Battery level placeholder
+            - Customizable message template with battery level
             - Auto-retry with exponential backoff
             - In-app test mode
             - Battery optimization prompt
           files: |
-            SmsSync-${{ steps.get_version.outputs.version }}.apk
+            ${{ steps.version.outputs.apk_name }}
           draft: false
           prerelease: false
+
+      # ─── Main branch pushes → delete previous "latest" release and create new one ───
+      - name: Delete old continuous release
+        if: github.ref_type != 'tag'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete continuous --yes 2>/dev/null || true
+
+      - name: Create continuous release (main)
+        if: github.ref_type != 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: continuous
+          name: SmsSync latest (autobuild)
+          body: |
+            ## SmsSync latest build
+
+            Automatically built from commit [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+
+            This release is **updated on every push** to the `main` branch.
+            Download the APK below and install it on your device.
+
+            ### Features
+            - Real-time SMS to Telegram forwarding
+            - Multi-SIM detection with carrier/custom naming
+            - Sender blacklist with wildcard support
+            - Customizable message template with battery level
+            - Auto-retry with exponential backoff
+            - In-app test mode
+            - Battery optimization prompt
+          files: |
+            ${{ steps.version.outputs.apk_name }}
+          draft: false
+          prerelease: true
