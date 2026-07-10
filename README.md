@@ -12,7 +12,6 @@ Lightweight Android app that forwards incoming SMS to a Telegram chat in real-ti
 - **Real-time forwarding** — Incoming SMS are sent to Telegram instantly via a foreground service
 - **Multi-SIM support** — Auto-detects which SIM received the message using multi-layered detection (intent extras → ContentProvider)
 - **SIM carrier & custom naming** — Shows operator name (e.g. "Vodafone") or user-defined labels (e.g. "Personal", "Business")
-- **Sender blacklist** — Block specific numbers or use wildcards (e.g. `123*`) to block prefixes
 - **Customizable message template** — Use placeholders: `{sender}`, `{message}`, `{sim}`, `{battery}`, `{time}`, `{date}`
 - **Battery level in messages** — `{battery}` placeholder shows current charge (e.g. `85%` or `Charging 92%`)
 - **Encrypted credentials** — Bot token and chat ID stored securely via `EncryptedSharedPreferences`
@@ -30,7 +29,7 @@ SmsReceiver (BroadcastReceiver)
   → TelegramSender.sendSmsToTelegram() — format template + POST to Telegram Bot API
   → MessageRetryQueue — persist failed messages for retry via WorkManager
 
-ForwardingManager — central state: pause/resume, blacklist, SIM info, daily counters, battery level
+ForwardingManager — central state: pause/resume, SIM info, daily counters, battery level
 
 SmsForwarderService (Foreground Service)
   → KeepAliveWorker (WorkManager, every 25 min) — ensures service stays alive on aggressive OEMs

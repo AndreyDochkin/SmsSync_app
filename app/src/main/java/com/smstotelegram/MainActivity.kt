@@ -267,16 +267,6 @@ class MainActivity : AppCompatActivity() {
             templateInput.setText(TelegramSender.getDefaultTemplate())
         }
 
-        // --- Blacklist section ---
-        val blacklistStatus = view.findViewById<TextView>(R.id.blacklist_status)
-        val addBlacklistButton = view.findViewById<Button>(R.id.add_blacklist_button)
-        val viewBlacklistButton = view.findViewById<Button>(R.id.view_blacklist_button)
-
-        updateBlacklistStatus(blacklistStatus)
-
-        addBlacklistButton.setOnClickListener { showAddToBlacklistDialog(blacklistStatus) }
-        viewBlacklistButton.setOnClickListener { showViewBlacklistDialog(blacklistStatus) }
-
         // --- Battery optimization section ---
         val batteryOptButton = view.findViewById<Button>(R.id.battery_opt_button)
         updateBatteryButtonText(batteryOptButton)
@@ -322,63 +312,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialog.show()
-    }
-
-    // ---- Blacklist helpers ----
-
-    private fun updateBlacklistStatus(textView: TextView) {
-        val count = ForwardingManager.getBlacklistedSenders().size
-        textView.text = if (count == 0) "No blocked senders" else "$count sender(s) blocked"
-    }
-
-    private fun showAddToBlacklistDialog(blacklistStatus: TextView) {
-        val input = EditText(this)
-        input.hint = "Enter phone number (use * for wildcard)"
-        input.inputType = android.text.InputType.TYPE_CLASS_PHONE
-        input.setTextColor(ContextCompat.getColor(this, R.color.text_primary))
-        input.setHintTextColor(ContextCompat.getColor(this, R.color.text_tertiary))
-        input.setBackgroundResource(R.drawable.bg_bento_card)
-
-        AlertDialog.Builder(this, R.style.Theme_SmsToTelegram)
-            .setTitle("Block Sender")
-            .setView(input, 48, 16, 48, 16)
-            .setPositiveButton("Block") { _, _ ->
-                val sender = input.text.toString().trim()
-                if (sender.isNotEmpty()) {
-                    ForwardingManager.addToBlacklist(sender)
-                    Toast.makeText(this, "Sender blocked", Toast.LENGTH_SHORT).show()
-                    updateBlacklistStatus(blacklistStatus)
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showViewBlacklistDialog(blacklistStatus: TextView) {
-        val blacklist = ForwardingManager.getBlacklistedSenders().toList()
-
-        val dialogBuilder = AlertDialog.Builder(this, R.style.Theme_SmsToTelegram)
-        dialogBuilder.setTitle("Blocked Senders")
-
-        if (blacklist.isNotEmpty()) {
-            dialogBuilder.setItems(blacklist.toTypedArray()) { _, which ->
-                val sender = blacklist[which]
-                AlertDialog.Builder(this, R.style.Theme_SmsToTelegram)
-                    .setTitle("Remove $sender?")
-                    .setPositiveButton("Remove") { _, _ ->
-                        ForwardingManager.removeFromBlacklist(sender)
-                        Toast.makeText(this, "Sender unblocked", Toast.LENGTH_SHORT).show()
-                        updateBlacklistStatus(blacklistStatus)
-                    }
-                    .setNegativeButton("Cancel", null)
-                    .show()
-            }
-        } else {
-            dialogBuilder.setMessage("No blocked senders")
-        }
-
-        dialogBuilder.setNegativeButton("Done", null)
-        dialogBuilder.show()
     }
 
     // ---- Battery optimization ----

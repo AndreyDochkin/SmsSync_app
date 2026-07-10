@@ -20,8 +20,7 @@ import kotlinx.coroutines.withContext
  *
  * Checks ForwardingManager for:
  * - Global forwarding toggle (pause/resume)
- * - Sender blacklist (block specific numbers without forwarding)
- *
+ * 
  * Detects which SIM slot received the SMS using a multi-layered approach:
  *   1. Intent extras (fast, works on most stock Android)
  *   2. SMS ContentProvider query (reliable fallback, reads subscription_id from SMS db)
@@ -244,12 +243,6 @@ class SmsReceiver : BroadcastReceiver() {
         // Check if forwarding is paused
         if (!ForwardingManager.isEnabled()) {
             Log.d(TAG, "Forwarding paused, ignoring SMS from $sender")
-            return
-        }
-
-        // Check blacklist
-        if (ForwardingManager.isBlacklisted(sender)) {
-            Log.d(TAG, "Sender $sender is blacklisted, ignoring")
             return
         }
 

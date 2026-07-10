@@ -177,10 +177,6 @@ object TelegramSender {
             return@withContext EmulationResult(success = false, skipped = true, reason = "Forwarding is paused")
         }
 
-        if (ForwardingManager.isBlacklisted(sender)) {
-            return@withContext EmulationResult(success = false, skipped = true, reason = "Sender is blacklisted")
-        }
-
         val token = getBotToken() ?: return@withContext EmulationResult(success = false, reason = "Bot token not configured")
         val chatId = getChatId() ?: return@withContext EmulationResult(success = false, reason = "Chat ID not configured")
         val template = getMessageTemplate()

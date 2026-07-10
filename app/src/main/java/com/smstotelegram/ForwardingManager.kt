@@ -6,20 +6,20 @@ import android.telephony.TelephonyManager
 import android.util.Log
 
 /**
- * Manages forwarding state, per-sender filtering, and SIM card detection.
+ * Manages forwarding state, SIM card detection, and daily statistics.
  *
  * Features:
  * - Global forwarding toggle (pause/resume without losing credentials)
- * - Sender blacklist (block specific numbers)
  * - Forwarding statistics (daily count, last forwarded time)
  * - Carrier detection per SIM (shows operator name like "T-Mobile" or "Vodafone")
+ * - Custom SIM naming for message templates
+ * - Battery level reading for {battery} placeholder
  */
 object ForwardingManager {
 
     private const val TAG = "ForwardingManager"
     private const val PREFS_NAME = "forwarding_config"
     private const val KEY_ENABLED = "forwarding_enabled"
-    private const val KEY_BLACKLIST = "sender_blacklist"
     private const val KEY_DAILY_COUNT = "daily_forward_count"
     private const val KEY_LAST_FORWARD_TIME = "last_forward_time"
     private const val KEY_LAST_DATE = "last_date"
@@ -309,45 +309,6 @@ object ForwardingManager {
         // otherwise fall back to "SIM 2" so both slots are distinguishable.
         if (carrier != null && carrier != sim1Carrier) return carrier
         return getSim2Name()
-    }
-
-    // ---- Blacklist ----
-
-    /** Get blacklisted senders as a set */
-    fun getBlacklistedSenders(): Set<String> {
-        return prefs?.getStringSet(KEY_BLACKLIST, emptySet()) ?: emptySet()
-    }
-
-    /** Add a sender to the blacklist */
-    fun addToBlacklist(sender: String) {
-        val current = getBlacklistedSenders().toMutableSet()
-        current.add(sender.trim())
-        prefs?.edit()?.putStringSet(KEY_BLACKLIST, current)?.apply()
-        Log.i(TAG, "Added $sender to blacklist")
-    }
-
-    /** Remove a sender from the blacklist */
-    fun removeFromBlacklist(sender: String) {
-        val current = getBlacklistedSenders().toMutableSet()
-        current.remove(sender)
-        prefs?.edit()?.putStringSet(KEY_BLACKLIST, current)?.apply()
-        Log.i(TAG, "Removed $sender from blacklist")
-    }
-
-    /** Check if a sender is blacklisted */
-    fun isBlacklisted(sender: String): Boolean {
-        val blacklist = getBlacklistedSenders()
-        if (blacklist.isEmpty()) return false
-        // Exact match
-        if (blacklist.contains(sender)) return true
-        // Wildcard: if a blacklist entry ends with *, match prefix
-        for (entry in blacklist) {
-            if (entry.endsWith("*")) {
-                val prefix = entry.removeSuffix("*")
-                if (sender.startsWith(prefix)) return true
-            }
-        }
-        return false
     }
 
     // ---- Battery level ----
