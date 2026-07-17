@@ -229,6 +229,15 @@ class SmsReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
+
+        // CRITICAL: Initialize singletons before using them.
+        // When the app process is killed and restarted by an incoming SMS,
+        // MainActivity may not be running, so TelegramSender and ForwardingManager
+        // would have null SharedPreferences. These init() calls are idempotent
+        // (they skip re-initialization if already done).
+        TelegramSender.init(context)
+        ForwardingManager.init(context)
+
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
         if (messages.isNullOrEmpty()) return
 
