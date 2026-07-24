@@ -7,6 +7,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * In-memory retry queue for messages that fail to send to Telegram.
@@ -35,7 +36,8 @@ class MessageRetryQueue {
         1_800_000L    // 30 minutes
     )
 
-    private var isProcessing = false
+    // Use AtomicBoolean for thread-safe processing flag
+    private val isProcessing = AtomicBoolean(false)
 
     data class QueuedMessage(
         val sender: String,
@@ -61,35 +63,50 @@ class MessageRetryQueue {
 
     /**
      * Process the queue by retrying failed messages with exponential backoff.
+     * Uses AtomicBoolean to prevent concurrent processing.
      */
     private fun processQueue() {
-        if (isProcessing) return
-        isProcessing = true
+        // Atomically check and set the processing flag
+        if (!isProcessing.compareAndSet(false, true)) {
+            Log.d(TAG, "Retry queue already processing, skipping")
+            return
+        }
 
         scope.launch {
-            Log.d(TAG, "Starting retry queue processing (${retryQueue.size} messages)")
-            while (retryQueue.isNotEmpty()) {
-                val message = retryQueue.peek() ?: break
+            try {
+                Log.d(TAG, "Starting retry queue processing (${retryQueue.size} messages)")
+                while (retryQueue.isNotEmpty()) {
+                    val message = retryQueue.peek() ?: break
 
-                val success = TelegramSender.sendSmsToTelegram(message.sender, message.body)
+                    // Check if forwarding is still enabled before retrying
+                    if (!ForwardingManager.isEnabled()) {
+                        Log.d(TAG, "Forwarding paused, deferring retry queue")
+                        break
+                    }
 
-                if (success) {
-                    retryQueue.poll() // Remove from queue
-                    Log.i(TAG, "Queued message sent successfully (${retryQueue.size} remaining)")
-                } else {
-                    message.retryCount++
-                    if (message.retryCount > backoffDelays.size) {
-                        retryQueue.poll() // Give up after max retries
-                        Log.w(TAG, "Dropped message after ${message.retryCount} retries (sender: ${message.sender})")
+                    val success = TelegramSender.sendSmsToTelegram(message.sender, message.body)
+
+                    if (success) {
+                        retryQueue.poll() // Remove from queue
+                        Log.i(TAG, "Queued message sent successfully (${retryQueue.size} remaining)")
                     } else {
-                        val delayMs = backoffDelays[message.retryCount - 1]
-                        Log.d(TAG, "Retry ${message.retryCount}/${backoffDelays.size} in ${delayMs / 1000}s")
-                        delay(delayMs)
+                        message.retryCount++
+                        if (message.retryCount > backoffDelays.size) {
+                            retryQueue.poll() // Give up after max retries
+                            Log.w(TAG, "Dropped message after ${message.retryCount} retries (sender: ${message.sender})")
+                        } else {
+                            val delayMs = backoffDelays[message.retryCount - 1]
+                            Log.d(TAG, "Retry ${message.retryCount}/${backoffDelays.size} in ${delayMs / 1000}s")
+                            delay(delayMs)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Retry queue processing error", e)
+            } finally {
+                isProcessing.set(false)
+                Log.d(TAG, "Retry queue processing complete")
             }
-            isProcessing = false
-            Log.d(TAG, "Retry queue processing complete")
         }
     }
 

@@ -48,7 +48,7 @@ tasks.whenTaskAdded {
         doLast {
             val apk = file("build/outputs/apk/debug/app-debug.apk")
             if (apk.exists()) {
-                val dest = rootProject.projectDir.parentFile.resolve("SmsSync-v${android.defaultConfig.versionName}.apk")
+                val dest = rootProject.projectDir.resolve("SmsSync-v${android.defaultConfig.versionName}.apk")
                 apk.copyTo(dest, overwrite = true)
                 println("APK copied to: ${dest.absolutePath}")
             }

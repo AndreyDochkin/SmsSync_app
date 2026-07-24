@@ -23,7 +23,7 @@ object TelegramSender {
     private const val KEY_BOT_TOKEN = "bot_token"
     private const val KEY_CHAT_ID = "chat_id"
     private const val KEY_MESSAGE_TEMPLATE = "message_template"
-    private const val DEFAULT_TEMPLATE = "📩 <b>New SMS</b>\n━━━━━━━━━━━━━━\n👤 {sender}\n💬 {message}\n📱 {sim}\n🔋 {battery}\n🕐 {time}"
+    private const val DEFAULT_TEMPLATE = "\uD83D\uDCE9 <b>New SMS</b>\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\uD83D\uDC64 {sender}\n\uD83D\uDCAC {message}\n\uD83D\uDCF1 {sim}\n\uD83D\uDD0B {battery}\n\uD83D\uDD50 {time}"
 
     private const val TELEGRAM_API_BASE = "https://api.telegram.org/bot"
     private const val SEND_MESSAGE_ENDPOINT = "/sendMessage"
@@ -92,6 +92,28 @@ object TelegramSender {
     }
 
     /**
+     * Escape text for safe inclusion in HTML Telegram messages.
+     * Replaces &, <, > with their HTML entity equivalents.
+     */
+    private fun htmlEscape(text: String): String {
+        // Build entity strings at runtime to prevent IDE formatter from
+        // converting literal "&" back to "&"
+        val amp = ('&'.toString() + "amp;")
+        val lt = ('&'.toString() + "lt;")
+        val gt = ('&'.toString() + "gt;")
+        val out = StringBuilder(text.length + 16)
+        for (ch in text) {
+            when (ch) {
+                '&' -> out.append(amp)
+                '<' -> out.append(lt)
+                '>' -> out.append(gt)
+                else -> out.append(ch)
+            }
+        }
+        return out.toString()
+    }
+
+    /**
      * Format a message using the configured template.
      * Supported placeholders:
      *   {sender}  - sender phone number
@@ -106,12 +128,12 @@ object TelegramSender {
         val timeStr = SimpleDateFormat("HH:mm", Locale.US).format(now)
         val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(now)
 
-        val safeSender = sender.replace("<", "<").replace(">", ">")
-        val safeMessage = messageBody.replace("<", "<").replace(">", ">")
-        val safeSim = simName.replace("<", "<").replace(">", ">").ifEmpty { "Unknown" }
+        val safeSender = htmlEscape(sender)
+        val safeMessage = htmlEscape(messageBody)
+        val safeSim = htmlEscape(simName).ifEmpty { "Unknown" }
 
         val batteryLevel = appContext?.let { ForwardingManager.getBatteryLevel(it) } ?: "N/A"
-        val safeBattery = batteryLevel.replace("<", "<").replace(">", ">")
+        val safeBattery = htmlEscape(batteryLevel)
 
         return template
             .replace("{sender}", safeSender)
@@ -210,6 +232,71 @@ object TelegramSender {
         } catch (e: Exception) {
             MessageRetryQueue.getInstance().enqueue(sender, messageBody)
             EmulationResult(success = false, reason = "Error: ${e.localizedMessage ?: "Unknown error"}, queued for retry")
+        }
+    }
+
+    /**
+     * Send a one-time low battery alert to the configured Telegram chat.
+     * Called when battery drops below 5%.
+     */
+    suspend fun sendLowBatteryAlert(percentage: Int): Boolean = withContext(Dispatchers.IO) {
+        val token = getBotToken() ?: return@withContext false
+        val chatId = getChatId() ?: return@withContext false
+
+        try {
+            val json = JSONObject().apply {
+                put("chat_id", chatId)
+                put("text", "\u26A0\uFE0F <b>Low Battery Warning</b>\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\uD83D\uDD0B Battery is at <b>$percentage%</b>\n\uD83D\uDCF1 Please charge your device soon!")
+                put("parse_mode", "HTML")
+                put("disable_web_page_preview", true)
+            }
+            val url = "$TELEGRAM_API_BASE$token$SEND_MESSAGE_ENDPOINT"
+            val body = json.toString().toRequestBody("application/json".toMediaType())
+            val request = Request.Builder()
+                .url(url)
+                .post(body)
+                .build()
+
+            val response = client.newCall(request).execute()
+            val success = response.isSuccessful
+            response.close()
+            success
+        } catch (e: Exception) {
+            Log.e(TAG, "Low battery alert failed", e)
+            false
+        }
+    }
+
+    /**
+     * Send a raw text message to the configured Telegram chat.
+     * Used by HeartbeatWorker and other internal features.
+     * Does NOT use the message template — sends the text as-is.
+     */
+    suspend fun sendRawMessage(text: String): Boolean = withContext(Dispatchers.IO) {
+        val token = getBotToken() ?: return@withContext false
+        val chatId = getChatId() ?: return@withContext false
+
+        try {
+            val json = JSONObject().apply {
+                put("chat_id", chatId)
+                put("text", text)
+                put("parse_mode", "HTML")
+                put("disable_web_page_preview", true)
+            }
+            val url = "$TELEGRAM_API_BASE$token$SEND_MESSAGE_ENDPOINT"
+            val body = json.toString().toRequestBody("application/json".toMediaType())
+            val request = Request.Builder()
+                .url(url)
+                .post(body)
+                .build()
+
+            val response = client.newCall(request).execute()
+            val success = response.isSuccessful
+            response.close()
+            success
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send raw message", e)
+            false
         }
     }
 

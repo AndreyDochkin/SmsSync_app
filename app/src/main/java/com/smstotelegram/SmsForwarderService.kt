@@ -54,6 +54,14 @@ class SmsForwarderService : Service() {
         // Called on every start to ensure the worker is scheduled
         KeepAliveWorker.schedule(this)
 
+        // Schedule daily heartbeat if enabled
+        if (ForwardingManager.isHeartbeatEnabled()) {
+            HeartbeatWorker.schedule(this)
+        }
+
+        // Check battery level and send low battery alert if needed
+        ForwardingManager.checkAndSendLowBatteryAlert(this)
+
         return START_STICKY
     }
 
@@ -64,8 +72,15 @@ class SmsForwarderService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.w(TAG, "SmsForwarderService destroyed — restarting")
-        // Self-restart on destruction
-        startService(Intent(this, SmsForwarderService::class.java))
+        // Self-restart on destruction using the correct API for the SDK level.
+        // Using startService() on Android 8+ would crash with IllegalStateException
+        // because background apps cannot start services directly.
+        val intent = Intent(this, SmsForwarderService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
     }
 
     private fun createNotificationChannel() {

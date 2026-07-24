@@ -26,3 +26,6 @@ Thumbs.db
 
 # ── Gradle distribution (download, not source) ──
 gradle-*/
+
+# ── Build artifacts ──
+*.apk

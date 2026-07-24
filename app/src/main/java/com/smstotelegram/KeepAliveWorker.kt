@@ -41,6 +41,9 @@ class KeepAliveWorker(context: Context, params: WorkerParameters) : CoroutineWor
                 applicationContext.startService(serviceIntent)
             }
 
+            // Check battery level and send low battery alert if needed
+            ForwardingManager.checkAndSendLowBatteryAlert(applicationContext)
+
             Log.i(TAG, "Keep-alive worker completed successfully")
             Result.success()
         } catch (e: Exception) {
@@ -59,8 +62,11 @@ class KeepAliveWorker(context: Context, params: WorkerParameters) : CoroutineWor
          * Uses KEEP policy so existing schedules are not duplicated.
          */
         fun schedule(context: Context) {
+            // IMPORTANT: Do NOT set setRequiresBatteryNotLow(true) here.
+            // The keep-alive worker must run even when battery is low to
+            // ensure the foreground service stays alive. The low battery
+            // alert is handled separately by ForwardingManager.
             val constraints = Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
                 .build()
 
             val request = PeriodicWorkRequestBuilder<KeepAliveWorker>(

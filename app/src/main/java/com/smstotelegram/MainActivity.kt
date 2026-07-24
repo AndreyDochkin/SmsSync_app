@@ -252,6 +252,10 @@ class MainActivity : AppCompatActivity() {
         val sim1NameInput = view.findViewById<TextInputEditText>(R.id.sim1_name_input)
         val sim2NameInput = view.findViewById<TextInputEditText>(R.id.sim2_name_input)
 
+        // Heartbeat switch
+        val heartbeatSwitch = view.findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.heartbeat_switch)
+        heartbeatSwitch.isChecked = ForwardingManager.isHeartbeatEnabled()
+
         TelegramSender.getBotToken()?.let { botTokenInput.setText(it) }
         TelegramSender.getChatId()?.let { chatIdInput.setText(it) }
         templateInput.setText(TelegramSender.getMessageTemplate())
@@ -304,6 +308,9 @@ class MainActivity : AppCompatActivity() {
             val sim2Name = sim2NameInput.text?.toString()?.trim() ?: ""
             ForwardingManager.saveSim1CustomName(sim1Name)
             ForwardingManager.saveSim2CustomName(sim2Name)
+
+            // Save heartbeat setting
+            ForwardingManager.setHeartbeatEnabled(heartbeatSwitch.isChecked)
 
             Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
             updateCredStatus()

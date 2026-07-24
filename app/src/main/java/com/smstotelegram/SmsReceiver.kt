@@ -35,6 +35,10 @@ class SmsReceiver : BroadcastReceiver() {
         private const val WAKE_LOCK_TAG = "SmsSync:WakeLock"
         private const val WAKE_LOCK_TIMEOUT_MS = 10_000L
 
+        // Companion object-level scope survives the short-lived BroadcastReceiver lifecycle.
+        // The SupervisorJob ensures one failed child coroutine doesn't cancel siblings.
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
         /**
          * All known intent extra keys that OEMs may use to pass SIM/subscription
          * information in the SMS_RECEIVED broadcast.
@@ -77,7 +81,6 @@ class SmsReceiver : BroadcastReceiver() {
         )
     }
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val retryQueue = MessageRetryQueue.getInstance()
 
     /**
@@ -237,6 +240,9 @@ class SmsReceiver : BroadcastReceiver() {
         // (they skip re-initialization if already done).
         TelegramSender.init(context)
         ForwardingManager.init(context)
+
+        // Check battery level and send low battery alert if needed
+        ForwardingManager.checkAndSendLowBatteryAlert(context)
 
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
         if (messages.isNullOrEmpty()) return

@@ -4,9 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.telephony.TelephonyManager
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
- * Manages forwarding state, SIM card detection, and daily statistics.
+ * Manages forwarding state, SIM card detection, daily statistics, and low battery alerts.
  *
  * Features:
  * - Global forwarding toggle (pause/resume without losing credentials)
@@ -14,6 +17,7 @@ import android.util.Log
  * - Carrier detection per SIM (shows operator name like "T-Mobile" or "Vodafone")
  * - Custom SIM naming for message templates
  * - Battery level reading for {battery} placeholder
+ * - One-time Telegram alert when battery drops below 5%
  */
 object ForwardingManager {
 
@@ -30,7 +34,13 @@ object ForwardingManager {
     private const val KEY_SIM1_CUSTOM_NAME = "sim1_custom_name"
     private const val KEY_SIM2_CUSTOM_NAME = "sim2_custom_name"
     private const val KEY_CONFIG_VERSION = "config_version"
-    private const val CURRENT_CONFIG_VERSION = 2
+    private const val KEY_LOW_BATTERY_ALERT_SENT = "low_battery_alert_sent"
+    private const val KEY_HEARTBEAT_ENABLED = "heartbeat_enabled"
+    private const val KEY_LAST_HEARTBEAT_TIME = "last_heartbeat_time"
+    private const val CURRENT_CONFIG_VERSION = 3
+
+    /** Battery threshold percentage for low battery alert */
+    private const val LOW_BATTERY_THRESHOLD = 5
 
     private var prefs: SharedPreferences? = null
     private var context: Context? = null
@@ -341,6 +351,98 @@ object ForwardingManager {
         } catch (e: Exception) {
             Log.w(TAG, "Failed to read battery level", e)
             return "N/A"
+        }
+    }
+
+    /**
+     * Get the current battery percentage as a raw integer (0-100).
+     * Returns null if the battery level cannot be determined.
+     */
+    fun getBatteryPercentage(ctx: Context): Int? {
+        try {
+            val intent = ctx.registerReceiver(
+                null,
+                android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED)
+            )
+            val level = intent?.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = intent?.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1) ?: -1
+            if (level == -1 || scale == -1) return null
+            return (level * 100.0 / scale).toInt()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to read battery percentage", e)
+            return null
+        }
+    }
+
+    // ---- Daily Heartbeat ----
+
+    /** Is the daily heartbeat enabled? Default: true */
+    fun isHeartbeatEnabled(): Boolean = prefs?.getBoolean(KEY_HEARTBEAT_ENABLED, true) ?: true
+
+    /** Enable or disable the daily heartbeat */
+    fun setHeartbeatEnabled(enabled: Boolean) {
+        prefs?.edit()?.putBoolean(KEY_HEARTBEAT_ENABLED, enabled)?.apply()
+        Log.i(TAG, "Heartbeat ${if (enabled) "enabled" else "disabled"}")
+        // Reschedule the heartbeat worker immediately
+        context?.let { HeartbeatWorker.reschedule(it) }
+    }
+
+    /** Get timestamp of last successful heartbeat */
+    fun getLastHeartbeatTime(): Long = prefs?.getLong(KEY_LAST_HEARTBEAT_TIME, 0L) ?: 0L
+
+    /** Set timestamp of last successful heartbeat */
+    fun setLastHeartbeatTime(time: Long) {
+        prefs?.edit()?.putLong(KEY_LAST_HEARTBEAT_TIME, time)?.apply()
+    }
+
+    // ---- Low battery alert ----
+
+    /**
+     * Check if the low battery alert has been sent for the current
+     * battery drain cycle.
+     */
+    fun isLowBatteryAlertSent(): Boolean =
+        prefs?.getBoolean(KEY_LOW_BATTERY_ALERT_SENT, false) ?: false
+
+    /**
+     * Mark the low battery alert as sent or reset it.
+     */
+    fun setLowBatteryAlertSent(sent: Boolean) {
+        prefs?.edit()?.putBoolean(KEY_LOW_BATTERY_ALERT_SENT, sent)?.apply()
+        Log.d(TAG, "Low battery alert sent flag set to $sent")
+    }
+
+    /**
+     * Checks the current battery level and sends a one-time Telegram alert
+     * if the battery drops below the threshold (5%) and the alert hasn't
+     * been sent yet. Resets the flag when battery goes above the threshold.
+     *
+     * This should be called periodically from the foreground service,
+     * keep-alive worker, SMS receiver, and boot receiver.
+     */
+    fun checkAndSendLowBatteryAlert(ctx: Context) {
+        val percentage = getBatteryPercentage(ctx) ?: return
+        val alertAlreadySent = isLowBatteryAlertSent()
+
+        if (percentage <= LOW_BATTERY_THRESHOLD) {
+            // Battery is critically low
+            if (!alertAlreadySent) {
+                Log.i(TAG, "Battery is at $percentage% (<= $LOW_BATTERY_THRESHOLD%), sending alert")
+                // Send the alert asynchronously using a coroutine
+                CoroutineScope(Dispatchers.Main).launch {
+                    TelegramSender.sendLowBatteryAlert(percentage)
+                }
+                setLowBatteryAlertSent(true)
+            } else {
+                Log.d(TAG, "Low battery alert already sent, skipping (battery: $percentage%)")
+            }
+        } else {
+            // Battery is above threshold — reset the flag so the alert
+            // can fire again next time the battery drops below threshold
+            if (alertAlreadySent) {
+                Log.i(TAG, "Battery recovered to $percentage% (above $LOW_BATTERY_THRESHOLD%), resetting alert flag")
+                setLowBatteryAlertSent(false)
+            }
         }
     }
 }
